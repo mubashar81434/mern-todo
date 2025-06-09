@@ -2,13 +2,8 @@
 
 import mongoose from "mongoose";
 
-// Subtask schema
-const subtaskSchema = new mongoose.Schema({
-  text: { type: String, required: true },
-  completed: { type: Boolean, default: false },
-});
+// Task schema
 
-// Main task schema
 const taskSchema = new mongoose.Schema(
   {
     title: {
@@ -16,17 +11,17 @@ const taskSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    priority: {
+      type: String,
+      enum: ["low", "normal", "high"],
+      default: "normal",
+    },
     description: {
       type: String,
       trim: true,
     },
     dueDate: {
       type: Date,
-    },
-    priority: {
-      type: String,
-      enum: ["low", "normal", "high"],
-      default: "normal",
     },
     assignee: {
       type: String,
@@ -37,18 +32,9 @@ const taskSchema = new mongoose.Schema(
       enum: ["todo", "inprogress", "done"],
       default: "todo",
     },
-    tags: [String],
-    subtasks: [subtaskSchema],
-    fileUrl: {
-      type: String, // Will store the file URL or path
-    },
-    completed: {
-      type: Boolean,
-      default: false,
-    },
-    deleted: {
-      type: Boolean,
-      default: false,
+    image: {
+      type: String, // This will store the Cloudinary image URL
+      trim: true,
     },
   },
   { timestamps: true }
