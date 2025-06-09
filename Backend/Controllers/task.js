@@ -1,4 +1,4 @@
-import Task from '../Models/task.js'
+import Task from "../Models/task.js";
 
 // Get all active (non-deleted) tasks
 export const allTasks = async (req, res) => {
@@ -13,41 +13,28 @@ export const allTasks = async (req, res) => {
 // Add a new task
 export const addTask = async (req, res) => {
   try {
-    const {
-      title,
-      description,
-      dueDate,
-      priority,
-      assignee,
-      status,
-      tags,
-      subtasks,
-      fileUrl, // URL from UploadThing
-    } = req.body;
+    const { title, description, dueDate, priority, assignee, status, image } =
+      req.body;
 
-    // Make sure subtasks are stored with `text` and `completed: false`
-    const formattedSubtasks = (subtasks || []).map((text) => ({
-      text,
-      completed: false,
-    }));
+    console.log("Received body =>", req.body);
 
     // Create new task in the database
-    const newTask = await Task.create({
+
+    const newTask = new Task({
       title,
       description,
       dueDate,
       priority,
       assignee,
       status,
-      tags: Array.isArray(tags) ? tags : [],
-      subtasks: formattedSubtasks,
-      fileUrl: fileUrl || null, // Optional field
+      image,
     });
+    const savedTask = newTask.save();
 
     res.status(201).json({
       status: 201,
       message: "Task created successfully",
-      task: newTask,
+      savedTask,
     });
   } catch (error) {
     console.error("Error creating task:", error);
@@ -58,7 +45,6 @@ export const addTask = async (req, res) => {
     });
   }
 };
-
 
 // Get only completed tasks
 export const completedTask = async (req, res) => {
