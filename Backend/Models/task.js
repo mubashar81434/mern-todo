@@ -1,10 +1,14 @@
+// Backend/Models/task.js
+
 import mongoose from "mongoose";
 
+// Subtask schema
 const subtaskSchema = new mongoose.Schema({
   text: { type: String, required: true },
   completed: { type: Boolean, default: false },
 });
 
+// Main task schema
 const taskSchema = new mongoose.Schema(
   {
     title: {
@@ -36,7 +40,7 @@ const taskSchema = new mongoose.Schema(
     tags: [String],
     subtasks: [subtaskSchema],
     fileUrl: {
-      type: String, // URL or filename depending on your file storage strategy
+      type: String, // Will store the file URL or path
     },
     completed: {
       type: Boolean,
@@ -50,4 +54,6 @@ const taskSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.models("Task") || mongoose.model("Task", taskSchema);
+// ✅ Safe model registration to avoid duplication in dev (especially with nodemon)
+const Task = mongoose.models.Task || mongoose.model("Task", taskSchema);
+export default Task;
