@@ -9,8 +9,12 @@ import { connectdb } from "./Configs/connectdb.js";
 import userRoutes from "./Routes/user.js";
 
 import taskRoutes from "./Routes/task.js";
+import { uploadRouter } from "./Routes/uploadthing.js"; // 👈 Import your router
+
 
 dotenv.config();
+
+app.use(express.json()); // Required to parse JSON request bodies
 
 connectdb(process.env.DB_URL)
 
@@ -22,7 +26,10 @@ app.get("/ping", (req, res) => {
 
 app.use("/user", userRoutes);
 
-app.use("/task", taskRoutes);
+app.use("/api/task", taskRoutes);
+// ✅ Mount UploadThing endpoint
+app.use(uploadthingRoutes);
+
 
 
 
