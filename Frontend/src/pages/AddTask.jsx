@@ -5,124 +5,88 @@ import {
   Flag,
   Save,
   User,
-  Tags,
   File,
-  Plus,
-  X,
 } from "lucide-react";
 
 const AddTask = () => {
   const [title, setTitle] = useState("");
-  const [priority, setPriority] = useState("normal");
+  const [priority, setPriority] = useState("low");
+  const [description, setDescription] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [assignee, setAssignee] = useState("");
+  const [status, setStatus] = useState("todo");
+  const [file, setFile] = useState(null);
+  const [imageUrl, setImageUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
 
-  const [task, setTask] = useState({
-    description: "",
-    dueDate: "",
-    assignee: "",
-    status: "todo",
-    tags: [],
-    tagInput: "",
-    subtasks: [],
-    file: null,
-  });
+  const handleFileChange = async (e) => {
+    const selectedFile = e.target.files[0];
+    setFile(selectedFile);
 
-  const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    setTask((prev) => ({
-      ...prev,
-      [name]: files ? files[0] : value,
-    }));
-  };
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+    formData.append("upload_preset", "task_mern"); // ✅ Replace with your Cloudinary upload preset
 
-  const handleTagKeyDown = (e) => {
-    if (e.key === "Enter" && task.tagInput.trim() !== "") {
-      e.preventDefault();
-      setTask((prev) => ({
-        ...prev,
-        tags: [...prev.tags, prev.tagInput.trim()],
-        tagInput: "",
-      }));
+    try {
+      setUploading(true);
+      const res = await fetch(
+        "https://api.cloudinary.com/v1_1/dfmxep8bm/image/upload", // ✅ Replace with your Cloud name
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await res.json();
+      setImageUrl(data.secure_url);
+      setUploading(false);
+    } catch (err) {
+      console.error("Error uploading to Cloudinary", err);
+      setUploading(false);
     }
-  };
-
-  const removeTag = (index) => {
-    setTask((prev) => ({
-      ...prev,
-      tags: prev.tags.filter((_, i) => i !== index),
-    }));
-  };
-
-  const addSubtask = () => {
-    setTask((prev) => ({
-      ...prev,
-      subtasks: [...prev.subtasks, ""],
-    }));
-  };
-
-  const removeSubtask = (index) => {
-    setTask((prev) => ({
-      ...prev,
-      subtasks: prev.subtasks.filter((_, i) => i !== index),
-    }));
-  };
-
-  const handleSubtaskChange = (index, value) => {
-    const updated = [...task.subtasks];
-    updated[index] = value;
-    setTask((prev) => ({
-      ...prev,
-      subtasks: updated,
-    }));
   };
 
   const handleSubmit = async (e) => {
+    e.preventDefault();
 
     try {
-      e.preventDefault();
+      const todo = {
+        title,
+        priority,
+        description,
+        dueDate,
+        assignee,
+        status,
+        image: imageUrl,
+      };
 
-      const formData = new FormData();
-      formData.append("title", title);
-      formData.append("priority", priority);
-      Object.entries(task).forEach(([key, value]) => {
-        if (key === "tags" || key === "subtasks") {
-          formData.append(key, JSON.stringify(value));
-        } else {
-          formData.append(key, value);
-        }
+      const response = await fetch("http://localhost:3310/api/task/add", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(todo),
       });
 
-      const url = 'http://localhost:3310/api/task/add';
-      const respose = await fetch(url, {
-        method: "POST",
-        body: formData
-      })
-      const responseInJson = await respose.json();
-      console.log('Response =>', responseInJson);
-      //console.log("Form Data submitted:", Object.fromEntries(formData.entries()));
+      const responseData = await response.json();
+      console.log("Response from backend =>", responseData);
 
-      // ✅ Reset all form fields
+      // Reset form
       setTitle("");
       setPriority("low");
-      setTask({
-        description: "",
-        dueDate: "",
-        assignee: "",
-        status: "todo",
-        tagInput: "",
-        tags: [],
-        subtasks: [],
-        file: null,
-      });
+      setDescription("");
+      setDueDate("");
+      setAssignee("");
+      setStatus("todo");
+      setFile(null);
+      setImageUrl("");
     } catch (error) {
-      console.log('Error submiting new task')
+      console.error("❌ Error submitting task:", error);
     }
-
-
   };
 
   return (
     <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white transition-colors duration-200">
-      {/* Header */}
       <header className="w-full px-4 py-4 border-b border-gray-300 dark:border-gray-800 flex justify-between items-center bg-gray-100 dark:bg-gray-900 shadow fixed top-0 z-50">
         <h1 className="text-xl font-bold">📝 Add Task</h1>
         <div className="flex items-center gap-4">
@@ -133,7 +97,6 @@ const AddTask = () => {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="mt-[68px]">
         <div className="bg-gray-100 dark:bg-gray-900 p-6 shadow-xl border border-gray-200 dark:border-gray-800">
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -143,7 +106,6 @@ const AddTask = () => {
                 <label className="block text-sm font-medium mb-1">Task Title</label>
                 <input
                   type="text"
-                  name="title"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   required
@@ -157,7 +119,6 @@ const AddTask = () => {
                   <Flag size={16} /> Priority
                 </label>
                 <select
-                  name="priority"
                   value={priority}
                   onChange={(e) => setPriority(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-black focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -174,9 +135,8 @@ const AddTask = () => {
               <div className="w-full lg:w-3/4">
                 <label className="block text-sm font-medium mb-1">Description</label>
                 <textarea
-                  name="description"
-                  value={task.description}
-                  onChange={handleChange}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
                   rows={11}
                   placeholder="Write task details..."
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-black focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -190,9 +150,8 @@ const AddTask = () => {
                   </label>
                   <input
                     type="date"
-                    name="dueDate"
-                    value={task.dueDate}
-                    onChange={handleChange}
+                    value={dueDate}
+                    onChange={(e) => setDueDate(e.target.value)}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-black focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
@@ -203,9 +162,8 @@ const AddTask = () => {
                   </label>
                   <input
                     type="text"
-                    name="assignee"
-                    value={task.assignee}
-                    onChange={handleChange}
+                    value={assignee}
+                    onChange={(e) => setAssignee(e.target.value)}
                     placeholder="e.g., John Doe"
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-black focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
@@ -214,9 +172,8 @@ const AddTask = () => {
                 <div>
                   <label className="text-sm font-medium mb-1">Status</label>
                   <select
-                    name="status"
-                    value={task.status}
-                    onChange={handleChange}
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-black focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   >
                     <option value="todo">To Do</option>
@@ -225,94 +182,28 @@ const AddTask = () => {
                   </select>
                 </div>
 
+                {/* File Upload */}
                 <div>
-                  <label className="text-sm font-medium flex items-center gap-1">
-                    <Tags size={16} /> Tags
+                  <label className="text-sm font-medium mb-1 flex items-center gap-1">
+                    <File size={16} /> Attachment
                   </label>
                   <input
-                    type="text"
-                    value={task.tagInput}
-                    onChange={(e) =>
-                      setTask((prev) => ({ ...prev, tagInput: e.target.value }))
-                    }
-                    onKeyDown={handleTagKeyDown}
-                    placeholder="Type and press Enter"
-                    className="w-full px-4 py-2 mb-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-black focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="w-full text-sm text-gray-500 dark:text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700"
                   />
-                  <div className="flex flex-wrap gap-2">
-                    {task.tags.map((tag, index) => (
-                      <span
-                        key={index}
-                        className="flex items-center gap-1 bg-indigo-600 text-white text-sm px-3 py-1 rounded-full"
-                      >
-                        {tag}
-                        <button
-                          type="button"
-                          onClick={() => removeTag(index)}
-                          className="hover:text-red-200"
-                        >
-                          <X size={14} />
-                        </button>
-                      </span>
-                    ))}
-                  </div>
+                  {uploading && <p className="text-xs text-gray-500 mt-1">Uploading image...</p>}
+                  
                 </div>
               </div>
-            </div>
-
-            {/* Subtasks */}
-            <div>
-              <label className="text-sm font-medium mb-1 flex items-center gap-1">
-                <Plus size={16} /> Subtasks
-              </label>
-              <div className="space-y-2">
-                {task.subtasks.map((subtask, index) => (
-                  <div key={index} className="flex gap-2">
-                    <input
-                      type="text"
-                      value={subtask}
-                      onChange={(e) =>
-                        handleSubtaskChange(index, e.target.value)
-                      }
-                      className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-black focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      placeholder={`Subtask ${index + 1}`}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeSubtask(index)}
-                      className="bg-red-500 text-white p-2 rounded hover:bg-red-600"
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={addSubtask}
-                  className="mt-2 text-indigo-600 hover:underline flex items-center gap-1"
-                >
-                  <Plus size={16} /> Add Subtask
-                </button>
-              </div>
-            </div>
-
-            {/* File Upload */}
-            <div>
-              <label className="text-sm font-medium mb-1 flex items-center gap-1">
-                <File size={16} /> Attachment
-              </label>
-              <input
-                type="file"
-                name="file"
-                onChange={handleChange}
-                className="w-full text-sm text-gray-500 dark:text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700"
-              />
             </div>
 
             {/* Submit */}
             <button
               type="submit"
               className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-4 rounded-lg flex justify-center items-center gap-2 transition"
+              disabled={uploading}
             >
               <Save size={18} /> Add Task
             </button>
