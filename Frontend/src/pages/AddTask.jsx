@@ -12,66 +12,112 @@ import {
 } from "lucide-react";
 
 const AddTask = () => {
+  const [title, setTitle] = useState("");
+  const [priority, setPriority] = useState("normal");
+
   const [task, setTask] = useState({
-    title: "",
     description: "",
     dueDate: "",
-    priority: "normal",
     assignee: "",
     status: "todo",
     tags: [],
     tagInput: "",
-    subtasks: [""],
+    subtasks: [],
     file: null,
   });
 
   const handleChange = (e) => {
-    const { name, value, type, files } = e.target;
-    if (type === "file") {
-      setTask((prev) => ({ ...prev, file: files[0] }));
-    } else {
-      setTask((prev) => ({ ...prev, [name]: value }));
-    }
-  };
-
-  const handleSubtaskChange = (index, value) => {
-    const updated = [...task.subtasks];
-    updated[index] = value;
-    setTask((prev) => ({ ...prev, subtasks: updated }));
-  };
-
-  const addSubtask = () => {
-    setTask((prev) => ({ ...prev, subtasks: [...prev.subtasks, ""] }));
-  };
-
-  const removeSubtask = (index) => {
-    const updated = [...task.subtasks];
-    updated.splice(index, 1);
-    setTask((prev) => ({ ...prev, subtasks: updated }));
+    const { name, value, files } = e.target;
+    setTask((prev) => ({
+      ...prev,
+      [name]: files ? files[0] : value,
+    }));
   };
 
   const handleTagKeyDown = (e) => {
     if (e.key === "Enter" && task.tagInput.trim() !== "") {
       e.preventDefault();
-      if (!task.tags.includes(task.tagInput.trim())) {
-        setTask((prev) => ({
-          ...prev,
-          tags: [...prev.tags, task.tagInput.trim()],
-          tagInput: "",
-        }));
-      }
+      setTask((prev) => ({
+        ...prev,
+        tags: [...prev.tags, prev.tagInput.trim()],
+        tagInput: "",
+      }));
     }
   };
 
   const removeTag = (index) => {
-    const updated = [...task.tags];
-    updated.splice(index, 1);
-    setTask((prev) => ({ ...prev, tags: updated }));
+    setTask((prev) => ({
+      ...prev,
+      tags: prev.tags.filter((_, i) => i !== index),
+    }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Task Submitted:", task);
+  const addSubtask = () => {
+    setTask((prev) => ({
+      ...prev,
+      subtasks: [...prev.subtasks, ""],
+    }));
+  };
+
+  const removeSubtask = (index) => {
+    setTask((prev) => ({
+      ...prev,
+      subtasks: prev.subtasks.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleSubtaskChange = (index, value) => {
+    const updated = [...task.subtasks];
+    updated[index] = value;
+    setTask((prev) => ({
+      ...prev,
+      subtasks: updated,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+
+    try {
+      e.preventDefault();
+
+      const formData = new FormData();
+      formData.append("title", title);
+      formData.append("priority", priority);
+      Object.entries(task).forEach(([key, value]) => {
+        if (key === "tags" || key === "subtasks") {
+          formData.append(key, JSON.stringify(value));
+        } else {
+          formData.append(key, value);
+        }
+      });
+
+      const url = 'http://localhost:3310/api/task/add';
+      const respose = await fetch(url, {
+        method: "POST",
+        body: formData
+      })
+      const responseInJson = await respose.json();
+      console.log('Response =>', responseInJson);
+      //console.log("Form Data submitted:", Object.fromEntries(formData.entries()));
+
+      // ✅ Reset all form fields
+      setTitle("");
+      setPriority("low");
+      setTask({
+        description: "",
+        dueDate: "",
+        assignee: "",
+        status: "todo",
+        tagInput: "",
+        tags: [],
+        subtasks: [],
+        file: null,
+      });
+    } catch (error) {
+      console.log('Error submiting new task')
+    }
+
+
   };
 
   return (
@@ -88,8 +134,8 @@ const AddTask = () => {
       </header>
 
       {/* Main Content */}
-      <main className="mt-[68px] ">
-        <div className="bg-gray-100 dark:bg-gray-900 p-6 shadow-xl border border-gray-200 dark:border-gray-800 ">
+      <main className="mt-[68px]">
+        <div className="bg-gray-100 dark:bg-gray-900 p-6 shadow-xl border border-gray-200 dark:border-gray-800">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Title & Priority */}
             <div className="flex flex-col md:flex-row gap-5">
@@ -98,21 +144,22 @@ const AddTask = () => {
                 <input
                   type="text"
                   name="title"
-                  value={task.title}
-                  onChange={handleChange}
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
                   required
                   placeholder="Enter task title"
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-black focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
+
               <div className="w-full md:w-48">
                 <label className="text-sm font-medium mb-1 flex items-center gap-1">
                   <Flag size={16} /> Priority
                 </label>
                 <select
                   name="priority"
-                  value={task.priority}
-                  onChange={handleChange}
+                  value={priority}
+                  onChange={(e) => setPriority(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-black focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
                   <option value="low">Low</option>
