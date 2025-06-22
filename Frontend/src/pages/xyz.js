@@ -5,6 +5,7 @@ import Landing from "./Landing";
 import NotFound from "./NotFound";
 import MyTasks from "./MyTasks";
 import DeletedTask from "./DeletedTask";
+import SignInPage from "./Signin";
 export {
   AddTask,
   CompletedTask,
@@ -13,4 +14,5 @@ export {
   NotFound,
   MyTasks,
   DeletedTask,
+  SignInPage
 };
