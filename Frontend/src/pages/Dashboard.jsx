@@ -1,12 +1,17 @@
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import { useState } from "react";
 
 const Dashboard = () => {
+
+  const [collapsed, setCollapsed] = useState(true);
+
   return (
     <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white flex">
+
       {/* Sidebar */}
-      <Sidebar />
+      <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col  transition-all duration-300">
