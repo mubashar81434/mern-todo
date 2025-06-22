@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 // Task schema
 
 const taskSchema = new mongoose.Schema(
+
   {
     title: {
       type: String,
@@ -32,14 +33,12 @@ const taskSchema = new mongoose.Schema(
       enum: ["todo", "inprogress", "done"],
       default: "todo",
     },
-    image: {
-      type: String, // This will store the Cloudinary image URL
-      trim: true,
-    },
   },
   { timestamps: true }
 );
 
 // ✅ Safe model registration to avoid duplication in dev (especially with nodemon)
+
 const Task = mongoose.models.Task || mongoose.model("Task", taskSchema);
+
 export default Task;
