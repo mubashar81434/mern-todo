@@ -3,7 +3,7 @@ import Task from "../Models/task.js";
 // Get all active (non-deleted) tasks
 export const allTasks = async (req, res) => {
   try {
-    const tasks = await Task.find({ deleted: false });
+    const tasks = await Task.find();
     res.status(200).json({ status: 200, tasks });
   } catch (error) {
     res.status(500).json({ status: 500, message: error.message });
@@ -12,9 +12,10 @@ export const allTasks = async (req, res) => {
 
 // Add a new task
 export const addTask = async (req, res) => {
+
   try {
-    const { title, description, dueDate, priority, assignee, status, image } =
-      req.body;
+
+    const { title, description, dueDate, priority, assignee, status } = req.body;
 
     console.log("Received body =>", req.body);
 
@@ -27,14 +28,13 @@ export const addTask = async (req, res) => {
       priority,
       assignee,
       status,
-      image,
     });
-    const savedTask = newTask.save();
+
+    newTask.save();
 
     res.status(201).json({
       status: 201,
       message: "Task created successfully",
-      savedTask,
     });
   } catch (error) {
     console.error("Error creating task:", error);
