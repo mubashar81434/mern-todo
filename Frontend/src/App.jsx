@@ -1,9 +1,10 @@
-import { Routes, Route } from "react-router-dom";
-import React from "react";
+import React, { useEffect } from "react";
+import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import {
   SignedIn,
   SignedOut,
   RedirectToSignIn,
+  useUser,
 } from "@clerk/clerk-react";
 
 import {
@@ -17,6 +18,23 @@ import {
 } from "./pages/xyz.js";
 
 const App = () => {
+  const { isSignedIn, isLoaded } = useUser();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    // Prevent infinite loop by checking current route
+    if (!isLoaded) return;
+
+    if (isSignedIn && location.pathname === "/") {
+      navigate("/dashboard");
+    }
+
+    if (!isSignedIn && location.pathname !== "/" && location.pathname.startsWith("/dashboard")) {
+      navigate("/");
+    }
+  }, [isSignedIn, isLoaded, navigate, location.pathname]);
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100">
       <main className="flex-1">
@@ -67,7 +85,7 @@ const App = () => {
             }
           />
 
-          {/* Fallback for unauthorized access */}
+          {/* Optional Fallback Redirect if needed */}
           <Route
             path="/dashboard"
             element={
