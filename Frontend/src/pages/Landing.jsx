@@ -1,6 +1,6 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { ArrowRight, PlayCircle } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { DarkModeToggle } from "../components/xyz.js";
 
 import {
@@ -8,26 +8,21 @@ import {
   SignedOut,
   SignInButton,
   UserButton,
-  useUser,
 } from "@clerk/clerk-react";
 
 const Landing = () => {
-  const navigate = useNavigate();
-  const { isSignedIn, isLoaded } = useUser();
-
-  useEffect(() => {
-    if (isLoaded && isSignedIn) {
-      navigate("/dashboard");
-    }
-  }, [isLoaded, isSignedIn, navigate]);
-
   return (
     <section className="bg-white dark:bg-black text-black dark:text-white w-full min-h-screen flex flex-col justify-center items-center px-6 transition-colors duration-300">
       {/* Header */}
       <header className="absolute top-6 left-6 flex gap-4">
         <SignedOut>
-          <SignInButton mode="redirect" />
+          <SignInButton mode="redirect">
+            <span className="text-black dark:text-white font-medium border border-gray-300 dark:border-gray-600 px-4 py-2 rounded-full cursor-pointer">
+              Sign In
+            </span>
+          </SignInButton>
         </SignedOut>
+
         <SignedIn>
           <UserButton afterSignOutUrl="/" />
         </SignedIn>
